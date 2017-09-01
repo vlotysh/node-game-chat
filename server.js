@@ -20,17 +20,30 @@ server.listen(5000, function() {
     console.log('Запускаю сервер на порте 5000');
 });
 
+playerRoom = '';
 
 var players = {};
 io.on('connection', function(socket) {
     const _id = socket.id
+
+    socket.on('room', function(room) {
+        playerRoom = room;
+        socket.join(playerRoom);
+    });
+
+
+    room = "room1";
+
+    socket.on('disconnect', function(data) {
+        socket.join(data);
+    });
 
     socket.on('disconnect', function() {
         console.log('playerDiconected');
         var name = playersList[_id];
         delete players[_id];
         delete playersList[_id];
-        io.sockets.emit('playerDiconected', name);
+        io.sockets.in(playerRoom).emit('playerDiconected', name);
     });
 
     socket.on('new player', function(name) {
@@ -41,7 +54,7 @@ io.on('connection', function(socket) {
             y: 300
         };
 
-        io.sockets.emit('playerJoined', name);
+        io.sockets.in(playerRoom).emit('playerJoined', name);
     });
 
     socket.on('chat', function(text) {
@@ -50,7 +63,7 @@ io.on('connection', function(socket) {
         message['player'] = playersList[socket.id];
         message['text'] = text;
         console.log(message);
-        io.sockets.emit('chatList', message);
+        io.sockets.in(playerRoom).emit('chatList', message);
     });
 
     socket.on('movement', function(data) {
@@ -71,5 +84,5 @@ io.on('connection', function(socket) {
 });
 
 setInterval(function() {
-    io.sockets.emit('state', players);
+    io.sockets.in(playerRoom).emit('state', players);
 }, 1000 / 60);

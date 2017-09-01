@@ -3,7 +3,17 @@ name = prompt("Enter your name");
 
 
 
-var socket = io();
+var socket = io.connect();
+
+
+var room = "room1";
+
+socket.on('connect', function() {
+    // Connected, let's sign-up for to receive messages for this room
+    socket.emit('room', room);
+});
+
+
 socket.on('message', function(data) {
     console.log(data);
 });
@@ -101,7 +111,8 @@ socket.on('playerJoined', function(player) {
 
 
 $('#chatBar input').keypress(function (e) {
-    if (e.which == 13) {
+    if (e.which == 13 && $('#chatBar input').val()) {
         socket.emit('chat', $('#chatBar input').val());
+        $('#chatBar input').val('');
     }
 });
